@@ -15,10 +15,10 @@ val SUPPORTED_LANGUAGES = listOf(
 object Constants {
     const val BASE_URL = "https://api.sarvam.ai/"
     const val WHISPER_MODEL = "saaras:v3"
-    const val API_KEY = "sk_b8p65og0_HMR51IL5Lt2n7iOSPm0aTu7B"
+    const val API_KEY = "sk_fzulcn1z_WzfcKV8FZSEgkwqiw3UHap8j"
     const val AUDIO_MIME_TYPE = "audio/x-m4a"
     const val LANG_CODE = "hi-IN"
 
     // other api key
-    // sk_fzulcn1z_WzfcKV8FZSEgkwqiw3UHap8j
+    // sk_b8p65og0_HMR51IL5Lt2n7iOSPm0aTu7B
 }
