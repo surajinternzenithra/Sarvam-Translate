@@ -6,6 +6,9 @@ data class SttResponse(
     val transcript: String
 )
 
+data class Language(val displayName: String, val code: String)
+
+
  // Translation
 data class TranslationRequest(
     @SerializedName("input") val input: String,

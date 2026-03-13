@@ -4,8 +4,10 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.zenithra.sarvam_translate.Repository.SttRepository
+import com.zenithra.sarvam_translate.ui.Language
 import com.zenithra.sarvam_translate.utils.AudioFileManager
 import com.zenithra.sarvam_translate.utils.AudioRecorder
+import com.zenithra.sarvam_translate.utils.SUPPORTED_LANGUAGES
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,6 +21,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow(MainUiState())
     val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
+
+    fun onSourceLanguageSelected(language: Language) {
+        _uiState.update { it.copy(sourceLanguage = language) }
+    }
+
+    fun onTargetLanguageSelected(language: Language) {
+        _uiState.update { it.copy(targetLanguage = language) }
+    }
+
+    fun onSourceTextChange(text: String) {
+        _uiState.update { it.copy(transcribedText = text) }
+    }
 
     fun startRecording() {
         if (_uiState.value.isRecording) return
@@ -37,7 +51,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val file = audioRecorder.currentFile ?: return
 
         viewModelScope.launch {
-            val result = repository.transcribeAudio(file)
+            val result = repository.transcribeAudio(file, _uiState.value.sourceLanguage.code)
             result
                 .onSuccess { text ->
                     _uiState.update { it.copy(transcribedText = text, isLoading = false) }
@@ -58,5 +72,7 @@ data class MainUiState(
     val isRecording: Boolean = false,
     val isLoading: Boolean = false,
     val transcribedText: String = "",
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val sourceLanguage: Language = SUPPORTED_LANGUAGES[0],
+    val targetLanguage: Language = SUPPORTED_LANGUAGES[1],
 )

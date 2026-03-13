@@ -22,20 +22,33 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zenithra.sarvam_translate.ui.ViewModel.MainViewModel
 import com.zenithra.sarvam_translate.utils.SUPPORTED_LANGUAGES
+import android.Manifest
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
+
 
 data class Language(val displayName: String, val code: String)
-
-// ─── Main Screen ──────────────────────────────────────────────────────────────
 
 @Composable
 fun MainScreen(
     viewModel: MainViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     var translatedText by remember { mutableStateOf("") }
-    var selectedSourceLanguage by remember { mutableStateOf(SUPPORTED_LANGUAGES[0]) }
-    var selectedTargetLanguage by remember { mutableStateOf(SUPPORTED_LANGUAGES[1]) }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            viewModel.startRecording()
+        } else {
+            Toast.makeText(context, "Microphone permission is required", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background
@@ -48,7 +61,6 @@ fun MainScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-
             Text(
                 text = "Translator",
                 fontSize = 24.sp,
@@ -56,7 +68,6 @@ fun MainScreen(
                 color = MaterialTheme.colorScheme.onBackground
             )
 
-            // ── Error Message ─────────────────────────────────────────────────
             uiState.errorMessage?.let { error ->
                 Text(
                     text = error,
@@ -65,49 +76,44 @@ fun MainScreen(
                 )
             }
 
-            // ── Source Text Section ───────────────────────────────────────────
             SourceTextSection(
                 text = uiState.transcribedText,
-                onTextChange = { /* allow manual edit if needed */ },
+                onTextChange = { viewModel.onSourceTextChange(it)},
                 isRecording = uiState.isRecording,
                 isLoading = uiState.isLoading,
                 onMicClick = {
                     if (uiState.isRecording) {
                         viewModel.stopRecording()
                     } else {
-                        viewModel.startRecording()
+                        permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
                     }
                 },
-                onSpeakerClick = { /* trigger TTS for source text */ }
+                onSpeakerClick = { }
             )
 
-            // ── Source Language Selector ──────────────────────────────────────
             LanguageSelector(
                 label = "From",
-                selectedLanguage = selectedSourceLanguage,
+                selectedLanguage = uiState.sourceLanguage,
                 languages = SUPPORTED_LANGUAGES,
-                onLanguageSelected = { selectedSourceLanguage = it }
+                onLanguageSelected = { viewModel.onSourceLanguageSelected(it) }
             )
 
-            // ── Target Language Selector ──────────────────────────────────────
             LanguageSelector(
                 label = "To",
-                selectedLanguage = selectedTargetLanguage,
+                selectedLanguage = uiState.targetLanguage,
                 languages = SUPPORTED_LANGUAGES,
-                onLanguageSelected = { selectedTargetLanguage = it }
+                onLanguageSelected = { viewModel.onTargetLanguageSelected(it) }
             )
 
-            // ── Target Text Section ───────────────────────────────────────────
             TargetTextSection(
                 text = translatedText,
-                onSpeakerClick = { /* trigger TTS for translated text */ }
+                onSpeakerClick = { }
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // ── Translate Button ──────────────────────────────────────────────
             Button(
-                onClick = { /* trigger translation */ },
+                onClick = { },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
@@ -127,7 +133,6 @@ fun MainScreen(
     }
 }
 
-// ─── Source Text Section ──────────────────────────────────────────────────────
 
 @Composable
 fun SourceTextSection(
@@ -160,7 +165,6 @@ fun SourceTextSection(
                 maxLines = 5
             )
 
-            // Loading spinner inside text box top-right
             if (isLoading) {
                 CircularProgressIndicator(
                     modifier = Modifier
@@ -203,7 +207,6 @@ fun SourceTextSection(
     }
 }
 
-// ─── Target Text Section ──────────────────────────────────────────────────────
 
 @Composable
 fun TargetTextSection(
@@ -252,7 +255,6 @@ fun TargetTextSection(
     }
 }
 
-// ─── Mic Button ───────────────────────────────────────────────────────────────
 
 @Composable
 fun MicButton(
@@ -285,7 +287,6 @@ fun MicButton(
     }
 }
 
-// ─── Language Selector ────────────────────────────────────────────────────────
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -345,7 +346,6 @@ fun LanguageSelector(
     }
 }
 
-// ─── Preview ──────────────────────────────────────────────────────────────────
 
 @Preview(showBackground = true)
 @Composable

@@ -13,7 +13,7 @@ class SttRepository {
 
     private val api = RetrofitClient.sttService
 
-    suspend fun transcribeAudio(audioFile: File): Result<String> {
+    suspend fun transcribeAudio(audioFile: File, languageCode: String): Result<String> {
         return try {
 
             val requestBody = audioFile.asRequestBody(Constants.AUDIO_MIME_TYPE.toMediaTypeOrNull())
@@ -21,7 +21,7 @@ class SttRepository {
 
             val model = Constants.WHISPER_MODEL.toRequestBody("text/plain".toMediaTypeOrNull())
             val mode = "transcribe".toRequestBody("text/plain".toMediaTypeOrNull())
-            val languageCode = Constants.LANG_CODE.toRequestBody("text/plain".toMediaTypeOrNull())
+            val languageCode = languageCode.toRequestBody("text/plain".toMediaTypeOrNull())
 
             val response = api.transcribeAudio(multipartBody, model, mode, languageCode)
 
