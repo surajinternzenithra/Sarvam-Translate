@@ -32,12 +32,10 @@ data class TranslationResponse(
 data class TtsRequest(
     @SerializedName("inputs") val inputs: List<String>,
     @SerializedName("target_language_code") val targetLanguageCode: String,
-    @SerializedName("speaker") val speaker: String = "meera",
-    @SerializedName("model") val model: String = "bulbul:v1",
-    @SerializedName("pitch") val pitch: Float = 0f,
+    @SerializedName("speaker") val speaker: String = "shubh",
+    @SerializedName("model") val model: String = "bulbul:v3",
     @SerializedName("pace") val pace: Float = 1.0f,
-    @SerializedName("loudness") val loudness: Float = 1.5f,
-    @SerializedName("speech_sample_rate") val speechSampleRate: Int = 8000,
+    @SerializedName("speech_sample_rate") val speechSampleRate: Int = 24000,
     @SerializedName("enable_preprocessing") val enablePreprocessing: Boolean = true
 )
 

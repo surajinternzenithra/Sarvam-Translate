@@ -6,10 +6,12 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.zenithra.sarvam_translate.Repository.SttRepository
 import com.zenithra.sarvam_translate.Repository.TranslateRepository
+import com.zenithra.sarvam_translate.Repository.TtsRepository
 import com.zenithra.sarvam_translate.ui.Language
 import com.zenithra.sarvam_translate.utils.AudioFileManager
 import com.zenithra.sarvam_translate.utils.AudioRecorder
 import com.zenithra.sarvam_translate.utils.SUPPORTED_LANGUAGES
+import com.zenithra.sarvam_translate.utils.text_to_speech.AudioPlayer
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,6 +23,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val audioRecorder = AudioRecorder(application)
     private val repository = SttRepository()
     private val translateRepository = TranslateRepository()
+    private val ttsRepository = TtsRepository()
 
     private val _uiState = MutableStateFlow(MainUiState())
     val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
@@ -97,6 +100,45 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun speakSourceText() {
+        val state = _uiState.value
+        if (state.sourceText.isBlank()) return
+        speak(text = state.sourceText, languageCode = state.sourceLanguage.code)
+    }
+
+    fun speakTranslatedText() {
+        val state = _uiState.value
+        if (state.translatedText.isBlank()) return
+        speak(text = state.translatedText, languageCode = state.targetLanguage.code)
+    }
+
+    private fun speak(text: String, languageCode: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isSpeaking = true, errorMessage = null) }
+            val result = ttsRepository.textToSpeech(text = text, targetLanguageCode = languageCode)
+            result
+                .onSuccess { response ->
+                    val base64Audio = response.audios.firstOrNull()
+                    if (base64Audio != null) AudioPlayer.playBase64Wav(base64Audio)
+                    _uiState.update { it.copy(isSpeaking = false) }
+                }
+                .onFailure { error ->
+                    Log.e("surajjj", "TTS failed: ${error.message}")
+                    _uiState.update { it.copy(isSpeaking = false, errorMessage = error.message) }
+                }
+        }
+    }
+
+    fun stopSpeaking() {
+        AudioPlayer.stop()
+        _uiState.update { it.copy(isSpeaking = false) }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        AudioPlayer.stop()
+    }
+
 }
 
 data class MainUiState(
@@ -108,4 +150,5 @@ data class MainUiState(
     val targetLanguage: Language = SUPPORTED_LANGUAGES[1],
     val translatedText: String = "",
     val isTranslating: Boolean = false,
+    val isSpeaking: Boolean = false,
 )

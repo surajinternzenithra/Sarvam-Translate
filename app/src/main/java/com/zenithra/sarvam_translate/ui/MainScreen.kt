@@ -86,7 +86,7 @@ fun MainScreen(
                         permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
                     }
                 },
-                onSpeakerClick = { }
+                onSpeakerClick = { viewModel.speakSourceText() }
             )
 
             LanguageSelector(
@@ -105,7 +105,7 @@ fun MainScreen(
 
             TranslatedTextSection(
                 text = uiState.translatedText,
-                onSpeakerClick = { }
+                onSpeakerClick = { viewModel.speakTranslatedText() }
             )
 
             Spacer(modifier = Modifier.height(8.dp))
