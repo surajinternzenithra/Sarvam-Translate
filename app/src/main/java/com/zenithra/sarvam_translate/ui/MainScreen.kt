@@ -38,8 +38,6 @@ fun MainScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    var translatedText by remember { mutableStateOf("") }
-
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -77,7 +75,7 @@ fun MainScreen(
             }
 
             SourceTextSection(
-                text = uiState.transcribedText,
+                text = uiState.sourceText,
                 onTextChange = { viewModel.onSourceTextChange(it)},
                 isRecording = uiState.isRecording,
                 isLoading = uiState.isLoading,
@@ -105,19 +103,20 @@ fun MainScreen(
                 onLanguageSelected = { viewModel.onTargetLanguageSelected(it) }
             )
 
-            TargetTextSection(
-                text = translatedText,
+            TranslatedTextSection(
+                text = uiState.translatedText,
                 onSpeakerClick = { }
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // Translate button
             Button(
-                onClick = { },
+                onClick = { viewModel.translate()},
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(52.dp),
-                enabled = uiState.transcribedText.isNotBlank() && !uiState.isLoading,
+                enabled = uiState.sourceText.isNotBlank() && !uiState.isLoading,
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary
@@ -209,7 +208,7 @@ fun SourceTextSection(
 
 
 @Composable
-fun TargetTextSection(
+fun TranslatedTextSection(
     text: String,
     onSpeakerClick: () -> Unit
 ) {
